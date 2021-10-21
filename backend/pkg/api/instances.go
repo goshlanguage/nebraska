@@ -227,7 +227,11 @@ func (api *API) RegisterInstance(instanceID, instanceAlias, instanceIP, instance
 	if err != nil {
 		return nil, err
 	}
+	doRollback := true
 	defer func() {
+		if !doRollback {
+			return
+		}
 		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
 			logger.Error().Err(err).Msg("RegisterInstance - could not roll back")
 		}
@@ -259,6 +263,7 @@ func (api *API) RegisterInstance(instanceID, instanceAlias, instanceIP, instance
 	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
+	doRollback = false
 	return api.GetInstance(instanceID, appID)
 }
 

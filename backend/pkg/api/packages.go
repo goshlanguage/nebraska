@@ -93,7 +93,11 @@ func (api *API) AddPackage(pkg *Package) (*Package, error) {
 	if err != nil {
 		return nil, err
 	}
+	doRollback := true
 	defer func() {
+		if !doRollback {
+			return
+		}
 		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
 			logger.Error().Err(err).Msg("AddPackage - could not roll back")
 		}
@@ -162,6 +166,7 @@ func (api *API) AddPackage(pkg *Package) (*Package, error) {
 	if err := tx.Commit(); err != nil {
 		return nil, err
 	}
+	doRollback = false
 	return pkg, nil
 }
 

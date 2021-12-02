@@ -297,22 +297,29 @@ func tokenFromRequest(c *gin.Context) string {
 
 // rolesFromToken extracts roles from a token. Returns empty array if not present.
 func rolesFromToken(token *oidc.IDToken, rolesPath string) ([]string, error) {
+	logger.Debug().Msg(fmt.Sprintf("rolesPath: %s", rolesPath))
+
 	roles := []string{}
 	var claimsString interface{}
 	err := token.Claims(&claimsString)
 	if err != nil {
 		return roles, err
 	}
+
 	out, err := json.Marshal(claimsString)
 	if err != nil {
 		return roles, err
 	}
 
 	result := gjson.Get(string(out), rolesPath)
+	logger.Debug().Msg(fmt.Sprintf("result from Get: %v", result))
+
 	result.ForEach(func(key, value gjson.Result) bool {
 		roles = append(roles, value.String())
 		return true
 	})
+
+	logger.Debug().Msg(fmt.Sprintf("roles found: %v", len(roles)))
 	return roles, nil
 }
 
